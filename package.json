@@ -1,6 +1,6 @@
 {
   "name": "sails-hook-extra-orm",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Emanimation Technologies Extra ORM function for Sails ORM. This introduces polymorphic associations, deep populate, dynamic attribute methods, soft deletes.",
   "main": "index.js",
   "scripts": {
@@ -14,9 +14,9 @@
     "sails",
     "orm",
     "polymorphic",
-		"soft deletes",
-		"dynamic attribute methods",
-		"deep populate",
+    "soft deletes",
+    "dynamic attribute methods",
+    "deep populate",
     "hook",
     "association"
   ],

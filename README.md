@@ -258,6 +258,16 @@ eg:
 looking at the full imaginary app above, the example will leave out other polymorphic relationships from other models, eg: kid, person, community... and return only house and family polymorphic records related to this status record.
 
 
+##### populate('*modelA,modelB,..')
+
+You can append model names separated by commas in the criteria and they will be treated as the models array array of models (see above) eg: `'*person,house'`
+
+eg:
+```js
+  await Status.find().populate('*house,family');
+```
+That will give the same results as the above. This is meant for deep population paths.
+
 ##### populate('*', subcriteria, [models])
 
 - subcriteria: normal waterline subcriteria, see waterline subcriteria for more details in sails documentation under reference.

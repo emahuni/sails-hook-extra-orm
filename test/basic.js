@@ -58,23 +58,6 @@ describe('Basic tests ::', function() {
         return true;
     });
 
-    context ('Patched orm models polymorphism successfully ::', function (){
-        context ('Status - the model with polymorphic attribute', function (){
-            // Status is the only one with a polymorphic attribute, so it's the only one that should have the following in this test app:
-            it('has polymorphic associations defined', async function (){
-                expect(Status.polymorphicAssociations, 'no polymorphic associations exists, hook ran after orm or it didn\' run properly').to.be.an('array');
-            });
-
-            it('has polymorphic attribute key', async function (){
-                expect(Status.polyAttribKey,'attribute that morphs accordingto associations has not been defined').to.be.a('string');
-            });
-
-            it('has polymorphic attributes patched in', async function (){
-                expect(Status.attributes, 'No polymorphed attributes according to expected associations').to.be.an('object').that.includes.all.keys(Status.polymorphicAssociations);
-            });
-        });
-    })
-
     context('Polymorphic Tests ::', async function () {
         var people, houses, statuses, sharedResults;
         
@@ -105,102 +88,132 @@ describe('Basic tests ::', function() {
             ]).fetch();
 
             // log.debug('awaited statuses: %o, \rhouses: %o, \rpeople: %o',statuses, houses, people);
+						await Person.addToCollection(people[0].id, 'statuses', statuses[2].id);
+						// add another association with status 2
+						await Person.addToCollection(people[2].id, 'statuses', statuses[2].id);
+						await Person.addToCollection(people[3].id, 'statuses', statuses[1].id);
+						await House.addToCollection(houses[2].id, 'states', statuses[1].id);
+						// add another association with status 2
+            await House.addToCollection(houses[1].id, 'states', statuses[2].id);
+						
         });
 
-        // the following are progressive tests, meaning each test modifies the db and doesn't clean up
-        // the next tests will use those modifications
-        it(`creates an association between people[0] => statuses[2] and successfully uses then`, async function (){
-            await Person.addToCollection(people[0].id, 'statuses', statuses[2].id);
+				
+				context ('Patched orm models polymorphism successfully ::', function (){
+						context ('Status - the model with polymorphic attribute', function (){
+								// Status is the only one with a polymorphic attribute, so it's the only one that should have the following in this test app:
+								it('has polymorphic associations defined', async function (){
+										expect(Status.polymorphicAssociations, 'no polymorphic associations exists, hook ran after orm or it didn\' run properly').to.be.an('array');
+								});
 
-            // now assert it
-            await Person.find(people[0].id).populate('statuses').then(r=>{
-                // log.debug('association result: ', r);
-                expect(r[0].statuses).to.be.an('array').that.has.lengthOf(1);
-            });
-        });
-        
-        it(`can find a record's polymorphic associations between people[0,2] <= statuses[2] and populate the results and successfully uses await`, async function (){
-            // add another association with status 2
-            await Person.addToCollection(people[2].id, 'statuses', statuses[2].id);
-            
-            // polymorphic methods are only found on polymorphic models chete
-            let r = await Status.find(statuses[2].id).populate('*');
-            
-            // log.debug('polymorphic association result: %o', r);
-            // 'affiliated' is the polymorphic association key defined in the statuses model. see statuses model definition in test/app/api/models/Statuses.js
-            expect(r[0].affiliated[0].person).to.be.an('array').that.has.lengthOf(2);
-                
-        });
+								it('has polymorphic attribute key', async function (){
+										expect(Status.polyAttribKey,'attribute that morphs accordingto associations has not been defined').to.be.a('string');
+								});
 
-        it('uses query modifiers successfully', async function (){
-            // should sort the statuses in reverse order on the name key
-            let awaitedResult = await Status.find().sort('label DESC').populate('*');
-            // log.debug('awaitedResult: ', awaitedResult);
-            
-            // the sort should have worked, if status Zero is coming on result 0
-            expect(awaitedResult[0].label).to.be.equal('Zero');
-        });
+								it('has polymorphic attributes patched in', async function (){
+										expect(Status.attributes, 'No polymorphed attributes according to expected associations').to.be.an('object').that.includes.all.keys(Status.polymorphicAssociations);
+								});
+						});
+				})
 
-        
-        context(`findONE #: `, function (){
-            before(async function (){
-                await Person.addToCollection(people[3].id, 'statuses', statuses[1].id);
-                await House.addToCollection(houses[2].id, 'states', statuses[1].id);
-            });
-            
-            it(`can findOne all polymorphic associations:`, async function (){
-                // this is the same as findOne
-                let r = await Status.findOne(statuses[1].id).populate('*');
+				context(`Test patched model methods #: `, function (){
+						context(`find #: `, function (){
+								it(`creates an association between people[0] => statuses[2] and successfully uses find...then`, async function (){ 
+										// now assert it
+										await Person.find(people[0].id).populate('statuses').then(r=>{
+												// log.debug('association result: ', r);
+												expect(r[0].statuses).to.be.an('array').that.has.lengthOf(1);
+										});
+								});
+								
+								it(`can find a record's polymorphic associations between people[0,2] <= statuses[2] and populate the results and successfully uses await`, async function (){
+										
+										// polymorphic methods are only found on polymorphic models chete
+										let r = await Status.find(statuses[2].id).populate('*');
+										
+										// log.debug('polymorphic association result: %o', r);
+										// 'affiliated' is the polymorphic association key defined in the statuses model. see statuses model definition in test/app/api/models/Statuses.js
+										expect(r[0].affiliated).to.be.an('array').that.has.lengthOf(2);
+										
+								});
+						});
 
-                // log.debug('polymorphic association result: %o', r);
-            
-                // since this is a single record, it will be an obj and not an array
-                expect(r).to.be.an('object');
-                expect(r.affiliated).to.be.lengthOf(2);
-            });
-            
-        });
+						it('uses query modifiers successfully', async function (){
+								// should sort the statuses in reverse order on the name key
+								let awaitedResult = await Status.find().sort('label DESC').populate('*');
+								// log.debug('awaitedResult: ', awaitedResult);
+								
+								// the sort should have worked, if status Zero is coming on result 0
+								expect(awaitedResult[0].label).to.be.equal('Zero');
+						});
 
-        context(`Populate #`, function () {
-            it(`Populates a specific model's polymorphic association(s) only: - string form`, async function (){
-                // this is the same as findOne
-                let r = await Status.findOne(statuses[1].id).populate('*', 'house');
+						
+						context(`findONE #: `, function (){
+								it(`can findOne all polymorphic associations:`, async function (){
+										// this is the same as findOne
+										let r = await Status.findOne(statuses[1].id).populate('*');
 
-                // log.debug('polymorphic association result: %o', r);
-            
-                // since this is a single record, it will be an obj and not an array
-                expect(r).to.be.an('object');
-                expect(r.affiliated[0].house).to.be.ok;
-            });
-            
-            it(`Populates specific models' polymorphic association(s) only - array form:`, async function (){
-                // this is the same as findOne
-                let r = await Status.findOne(statuses[1].id).populate('*', ['person','house']);
+										// log.debug('polymorphic association result: %o', r);
+										
+										// since this is a single record, it will be an obj and not an array
+										expect(r).to.be.an('object');
+										expect(r.affiliated).to.be.lengthOf(2);
+								});
+								
+						});
+				});
+				
+				context(`Test patched model instance methods #: `, function (){
+						context(`Populate #`, function () {
+								it(`Populates a specific model's polymorphic association(s) only: - string form`, async function (){
+										// this is the same as findOne
+										let r = await Status.findOne(statuses[1].id).populate('*', 'house');
 
-                // log.debug('polymorphic association result: %o', r);
-            
-                // since this is a single record, it will be an obj and not an array
-                expect(r).to.be.an('object');
-                expect(r.affiliated).to.be.lengthOf(2);
-            });
-            
-            it(`Populates ... and applies subcriteria:`, async function (){
-                // we are going to get person model record only
-                let r = await Status.findOne(statuses[1].id).populate('*', {id: people[3].id}, ['person','house']);
+										// log.debug('polymorphic association result: %o', r);
+										
+										// since this is a single record, it will be an obj and not an array
+										expect(r).to.be.an('object');
+										expect(r.affiliated[0].house).to.be.ok;
+								});
+								
+								it(`Populates specific models' polymorphic association(s) only using criteria - *house,person:`, async function (){
+										// this is the same as findOne
+										let r = await Status.findOne(statuses[1].id).populate('*person,house');
 
-                // log.debug('polymorphic association result: %o', r);
-            
-                // since this is a single record, it will be an obj and not an array
-                expect(r).to.be.an('object');
-                expect(r.affiliated).to.be.lengthOf(1);
-            });
-        });
+										// log.debug('polymorphic association result: %o', r);
+										
+										// since this is a single record, it will be an obj and not an array
+										expect(r).to.be.an('object');
+										expect(r.affiliated).to.be.lengthOf(2);
+								});
+								
+								it(`Populates specific models' polymorphic association(s) only - array form:`, async function (){
+										// this is the same as findOne
+										let r = await Status.findOne(statuses[1].id).populate('*', ['person','house']);
+
+										// log.debug('polymorphic association result: %o', r);
+										
+										// since this is a single record, it will be an obj and not an array
+										expect(r).to.be.an('object');
+										expect(r.affiliated).to.be.lengthOf(2);
+								});
+								
+								it(`Populates ... and applies subcriteria:`, async function (){
+										// we are going to get person model record only
+										let r = await Status.findOne(statuses[1].id).populate('*', {id: people[3].id}, ['person','house']);
+
+										// log.debug('polymorphic association result: %o', r);
+										
+										// since this is a single record, it will be an obj and not an array
+										expect(r).to.be.an('object');
+										expect(r.affiliated).to.be.lengthOf(1);
+								});
+						});
+				});
 
         
         
         it(`can find a record's polymorphic associations between houses[1] <= statuses[2] and people[0,2] <= statuses[2] and populate the results`, async function (){
-            // add another association with status 2
-            await House.addToCollection(houses[1].id, 'states', statuses[2].id);
             
             // polymorphic methods are only found on polymorphic models chete
             let r = await Status.find(statuses[2].id).populate('*');

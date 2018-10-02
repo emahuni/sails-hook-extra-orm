@@ -2,12 +2,13 @@
 
 [![NPM](https://nodei.co/npm/sails-hook-extra-orm.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/sails-hook-extra-orm/)
 
+THIS HOOK HAS BEEN DEPRECATED IN FAVOUR OF [Deep ORM](https://npmjs.com/package/sails-hook-deep-orm), it has all the todo features implemented plus more.
+
 Hook to add extra orm functionality to the default Sails ORM until these features are implemented in the core.
 
 ## Features:
 - Polymorphic associations
 - Deep Populates [todo]
-- Dynamic Attribute Mehods [todo]
 
 [![Donate using Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/emahuni/donate)
 
